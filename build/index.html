@@ -1,0 +1,155 @@
+<html class="h-full">
+	<head>
+		<title>All things fall apart - society simulation</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+	</head>
+	<body class="flex">
+		<div class="container mx-auto">
+			<center>
+				<div id="ttl" class="border border-b">
+					<h1 class="text-3xl border-b border-gray py-5">All Things Fall Apart - Society Simulation</h1> 
+					<div class="w-1/2 py-6">
+					<p class="">all calculations are made with a certain bias that each gender has, this is not meant in a discriminatory way, it is only a replication of the situation and intended to demonstrate variability.</p>
+					</div>
+				</div>
+				<div id="controls" class="">
+					<div>
+						<label for="pop-size">Enter village population size:</label>
+						<input type="number" min="1" max="500" id="pop-size" placeholder="<500"  class="my-2 mx-2 w-20 border-b hover:border-black" >				
+					</div>
+
+					<div>
+						<label for="gender-ratio">Select gender ratio (proportion of women in the population):</label>
+						<select id="gender-ratio" class="my-2 mx-2 rounded border-b hover:border-black">
+								<option>- females/population -</option>
+								<option value="a">0.25</option>
+								<option value="b">0.5</option>
+								<option value="c">0.75</option>
+								<option value="d">1</option>
+						</select>
+					</div>
+					<div>
+						<label for="">Proportion of women that work on the task:</label>
+						<select id="inclusion-proportion" class="my-2 mx-2 rounded border-b hover:border-black">	
+								<option>- female-memebers-working/females</option>
+								<option value="n">0</option>
+								<option value="a">0.25</option>
+								<option value="b">0.5</option>
+								<option value="c">0.75</option>
+								<option value="d">1</option>
+						</select>
+					</div>
+					<div>			
+						<label for="task">Choose task for which to propagate:</label>
+						<select id="task" class="my-2 mx-2 rounded border-b hover:border-black">			
+							<option value="n">- select what the population should do -</option>
+							<option value="house">Build a house</option>
+							<option value="war">Go to war</option>
+							<option value="farm">Farm</option>
+						</select>
+					</div>
+					<div class="my-4">
+						<button class="rounded border border-md border-black px-5 bg-green-500" id="compute">Compute</button>
+					</div>
+				</div>
+			</center>
+
+			<div id="scene">
+			</div>
+			<div class="py-7">
+				<footer class="w-full text-center border-t border-gray p-4 pin-b">
+					Author:<a href="https://github.com/danalves24com" class="text-yellow-600"> Daniel Rosel</p>
+				</footer>
+			</div>
+
+		</div>
+
+	</body>
+</html>
+	<script>
+		$("#compute").click(function(){
+			var inputs = [$("#pop-size")[0].value, $("#task")[0].value, $("#gender-ratio")[0].value, $("#inclusion-proportion")[0].value ]
+			if(parseInt(inputs[0]) <= 500 && inputs[0] != "") {
+				if(inputs[1] != "n") {
+					actions[$("#task")[0].value]()
+				}
+			}
+			else {
+				alert("Please check the population size");
+			}
+
+		})
+		class woman {
+			constructor() {
+			
+			}
+			
+			houseBuildTime() {
+				return 40;
+			}
+
+			warProbabilitySuccess() {
+				return 0.6;
+			}
+			yamsFarmedPerYear() {
+				return 1000;
+			}
+		}
+
+		class man {
+			constructor() {
+
+			}
+
+			houseBuildTime() {
+				return 30;				
+			}
+			warProbabilitySuccess() {
+				return 0.7;			
+			}
+			yamsFarmedPerYear() {
+				return 1600;
+			}
+		}
+		function populationSize() { return parseInt($("#pop-size")[0].value) }	
+		function getProportion(p) {return [0.0,0.25, 0.5, 0.75, 1][ ["n","a","b","c","d"].indexOf(p)]}
+		function getFemalesInSociety() {return Math.round(getProportion($("#gender-ratio")[0].value) * $("#pop-size")[0].value);} 
+		function getProportionOfWorkingFemalesInSociety() { return Math.round(getProportion($("#inclusion-proportion")[0].value)*getFemalesInSociety())}
+		function result(title, a, b, c) {
+				$("#scene").html(`
+
+
+
+					<h2 class="text-2xl">${title}:</h2>
+					<h3 class="text-xl mx-9"><b class="text-bold">Men:</b> ${a} </h3>
+					<h3 class="text-xl mx-9"><b class="text-bold">Women:</b> ${b}</h3>
+					<h3 class="text-xl mx-9"><b class="text-bold">Both Genders:</b> ${c}</h3>
+					<h2 class="text-2xl">If:</h2>
+					<h3 class="text-xl mx-9">The population has ${getProportionOfWorkingFemalesInSociety()} working women and ${populationSize() - getFemalesInSociety()} men</h3>
+					`);
+		}
+		var actions = {
+			"house": function() {
+				var male = new man();
+				var female = new woman();
+				var women = getProportionOfWorkingFemalesInSociety();
+				var men = $("#pop-size")[0].value - women;
+				var timeMenOnly =  male.houseBuildTime() / men;
+				result("Days to build a house by",timeMenOnly, new woman().houseBuildTime() / women,(new woman().houseBuildTime() + new man().houseBuildTime()) / $("#pop-size")[0].value)
+
+			},
+			"war": function() {
+				var women = getProportionOfWorkingFemalesInSociety();
+				var men = $("#pop-size")[0].value - women;
+				result("Probability of success in war for",Math.pow(new man().warProbabilitySuccess(), men*0.03),Math.pow(new woman().warProbabilitySuccess(), women*0.03), Math.pow(new man().warProbabilitySuccess(), men*0.03) * Math.pow(new woman().warProbabilitySuccess(), women*0.03))
+			},
+			"farm": function() {
+
+				var women = getProportionOfWorkingFemalesInSociety();
+				var men = $("#pop-size")[0].value - women;
+				result("Yams farmed yearly for", new man().yamsFarmedPerYear() * men, new woman().yamsFarmedPerYear() * women, ( new woman().yamsFarmedPerYear() * women ) + ( new man().yamsFarmedPerYear() * men ) )		
+			}
+		}	
+	</script>
+
